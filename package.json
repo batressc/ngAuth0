@@ -1,9 +1,10 @@
 {
-  "name": "angular2-quickstart",
+  "name": "ba3-auth0",
   "version": "1.0.0",
   "scripts": {
     "start": "tsc && concurrently \"npm run tsc:w\" \"npm run lite\" ",
     "lite": "lite-server",
+    "preinstall": "bower install",
     "postinstall": "typings install",
     "tsc": "tsc",
     "tsc:w": "tsc -w",
@@ -23,7 +24,6 @@
     "@angular/upgrade": "2.0.0-rc.6",
     "angular2-in-memory-web-api": "0.0.18",
     "angular2-jwt": "^0.1.21",
-    "auth0-lock": "^10.2.2",
     "core-js": "^2.4.1",
     "localforage": "^1.4.2",
     "lodash": "^4.15.0",
