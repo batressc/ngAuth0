@@ -5,8 +5,6 @@ import { Component } from '@angular/core';
     templateUrl: 'app/home/home.component.html',
     styleUrls: ['app/home/home.component.css']
 })
-class HomeComponent {
-
-}
+class HomeComponent { }
 
 export { HomeComponent }

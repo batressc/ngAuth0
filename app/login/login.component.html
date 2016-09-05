@@ -1,1 +1,2 @@
-<h1>Login</h1>
+<button (click)="auth.login()" *ngIf="!auth.authenticated()">Login</button> 
+<button (click)="auth.logout()" *ngIf="auth.authenticated()">Logout</button>
