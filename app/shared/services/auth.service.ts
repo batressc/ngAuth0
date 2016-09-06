@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 
 import { tokenNotExpired } from 'angular2-jwt';
 import { CLIENT_ID, DOMAIN, TOKEN_NAME } from '../../app.auth.config';
-import { errorGroup, informationGroup, warningGroup } from '../tools/utilities.tool';
-const locaforage: LocalForage = require('localforage');
+import { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup } from '../tools/utilities.tool';
+const localforage: LocalForage = require('localforage');
 
 declare var Auth0Lock: any;
 
@@ -23,55 +23,74 @@ class AuthService {
             storeName: 'authData',
             description: 'Datos de autenticación'
         };
-        if (locaforage.config(config)) {
-            console.info('Creado almacén de datos de autenticación');
+        if (localforage.config(config)) {
+            infoConsoleGroup(
+                'localForage: Inicialización',
+                'Creado almacén de datos de autenticación',
+                config
+            );     
         } else {
-            console.warn('No se inicializó almacén de datos. Utilizando valores por defecto');
+            warnConsoleGroup(
+                'localForage: Inicialización',
+                'No se inicializó almacén de datos. Utilizando valores por defecto',
+                localforage
+            );
+            console.warn();
         }
     }
 
     //Se produce cuando se muestra la ventana de login
-    private showCallback(): void { 
-        console.info('Mostrando Auth0 Lock screen');
+    private showCallback(): void {
+        infoConsoleGroup(
+            'auth0-lock: show',
+            'Mostrando Auth0 Lock screen'
+        ); 
     }
 
     //Se produce cuando se oculta la ventana de login
     private hideCallback(): void { 
-        console.info('Ocultando Auth0 Lock screen');
+        infoConsoleGroup(
+            'auth0-lock: hide',
+            'Ocultando Auth0 Lock screen'
+        );
     }
 
     //Se produce cuando ocurre un error irrecuperable (ej: no conexion)
     private unrecoverableErrorCallback(unrecoverableError: any): void { 
-        errorGroup(
+        errorConsoleGroup(
             'auth0-lock: unrecoverable_error',
             'Ha ocurrido un error irrecuperable',
-            unrecoverableError);
+            unrecoverableError
+        );
     }
 
     //Se produce despues de autenticacion exitosa
     private authenticatedCallback(authResult: any): void { 
-        locaforage.setItem(TOKEN_NAME, authResult)
-            .then(data => informationGroup(
+        localforage.setItem(TOKEN_NAME, authResult)
+            .then(data => infoConsoleGroup(
                 'auth0-lock: authenticated',
                 'Autenticacion exitosa',
-                data))
-            .catch(error => errorGroup(
+                data
+            ))
+            .catch(error => errorConsoleGroup(
                 'auth0-lock: authenticated',
                 'Error al guardar la informacion del token de autenticacion',
-                error));
+                error
+            ));
     }
 
     //Se produce cuando ocurre un error de autenticacion
     private authorizationErrorCallback(authError: any): void { 
-        errorGroup(
+        errorConsoleGroup(
             'auth0-lock: authorization_error',
             'Error al verificar la autenticación',
-            authError);
+            authError
+        );
     }
 
     //Metodo low-level. Si no hay nada => null, exito => authResult, error => authError
     private hashParsedCallback(result: any): void { 
-        warningGroup(
+        warnConsoleGroup(
             'auth0-lock: hash_parsed',
             'Mostrando unicamente lo que pasa en este evento',
             result
@@ -97,24 +116,59 @@ class AuthService {
         this.configureCallbacksAuth0Lock();
     }
 
+    /** Realiza la validacion de existencia del token de autenticacion */
+    isTokenNotExpired(): string {
+        return localStorage.getItem(TOKEN_NAME)
+            .then(data => { 
+                if (data) {
+                    infoConsoleGroup(
+                        'angular2-jwt: tokenGetter',
+                        'Datos de token de autenticación recuperados',
+                        data
+                    );
+                    return data.id_token;
+                } else {
+                    warnConsoleGroup(
+                        'angular2-jwt: tokenGetter',
+                        'No se encontraron datos de token de autenticación',
+                        `Nombre del token: ${TOKEN_NAME}`
+                    );
+                    return null;
+                } 
+            })
+            .catch(error => {
+                errorConsoleGroup(
+                    'angular2-jwt: tokenGetter',
+                    'Error al recuperar los datos del token de autenticación',
+                    error
+                );
+                return null;
+            });
+    }
+
     /** Lanza el widget de login de auth0 */
     login(): void {
         this.lock.show();
     }
 
+    /** Verifica si el token de autenticacion es valido */
     authenticated(): boolean {
         return tokenNotExpired();
     }
 
+    /** Remueve la informacion del token de autenticacion */
     logout(): void {
-        locaforage.removeItem(TOKEN_NAME)
-            .then(() => informationGroup(
+        localforage.removeItem(TOKEN_NAME)
+            .then(() => infoConsoleGroup(
                 'auth0-lock: logout',
-                'Se removió informacion del token de autenticación'))
-            .catch(error => errorGroup(
+                'Se removió informacion del token de autenticación',
+                TOKEN_NAME
+            ))
+            .catch(error => errorConsoleGroup(
                 'auth0-lock: logout',
                 'No se pudo eliminar la informacion del token de autenticación',
-                error));
+                error
+            ));
     }
 }
 
