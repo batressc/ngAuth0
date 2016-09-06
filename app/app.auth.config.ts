@@ -1,5 +1,7 @@
 import { Http, RequestOptions } from '@angular/http';
+
 import { AuthHttp, AuthConfig } from 'angular2-jwt';
+
 import { AuthService } from './shared/services/auth.service';
 
 const CLIENT_ID: string = 'dlPojysYVsEdDoyTelIKYSMM11OUGJ6x';

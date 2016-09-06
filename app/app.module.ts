@@ -14,8 +14,8 @@ import { AuthService } from './shared/services/auth.service';
     declarations: [AppComponent, LoginComponent, HomeComponent],
     bootstrap: [AppComponent],
     providers: [
-        appRoutingProviders, 
-        AuthService,
+        appRoutingProviders,
+        AuthService, 
         CUSTOM_AUTH_PROVIDER
     ]
 })

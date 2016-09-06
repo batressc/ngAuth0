@@ -6,11 +6,10 @@ import { LoginComponent } from './login/login.component';
 
 const appRoutes: Routes = [
     { path: 'home', component: HomeComponent },
-    { path: 'login', component: LoginComponent }
+    { path: 'login', component: LoginComponent },
+    { path: '**', component: LoginComponent }
 ];
-
 const appRoutingProviders: any[] = [];
-
 const routing: ModuleWithProviders = RouterModule.forRoot(appRoutes);
 
 export { appRoutingProviders, routing }
