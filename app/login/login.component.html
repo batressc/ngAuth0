@@ -1,2 +1,2 @@
-<button (click)="auth.login()" *ngIf="!auth.authenticated()">Login</button> 
-<button (click)="auth.logout()" *ngIf="auth.authenticated()">Logout</button>
+<button (click)="login()" *ngIf="!isAuthenticated">Login</button> 
+<button (click)="logout()" *ngIf="isAuthenticated">Logout</button>

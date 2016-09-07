@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { tokenNotExpired } from 'angular2-jwt';
+import { JwtHelper } from 'angular2-jwt';
 import { CLIENT_ID, DOMAIN, TOKEN_NAME } from '../../app.auth.config';
 import { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup } from '../tools/utilities.tool';
 const localforage: LocalForage = require('localforage');
@@ -116,9 +116,9 @@ class AuthService {
         this.configureCallbacksAuth0Lock();
     }
 
-    /** Realiza la validacion de existencia del token de autenticacion */
-    isTokenNotExpired(): string {
-        return localStorage.getItem(TOKEN_NAME)
+    /** Devuelve el id_token del token JWT */
+    getIdToken(): Promise<string> {
+        return localforage.getItem<any>(TOKEN_NAME)
             .then(data => { 
                 if (data) {
                     infoConsoleGroup(
@@ -126,7 +126,7 @@ class AuthService {
                         'Datos de token de autenticación recuperados',
                         data
                     );
-                    return data.id_token;
+                    return <string>data.idToken;
                 } else {
                     warnConsoleGroup(
                         'angular2-jwt: tokenGetter',
@@ -140,6 +140,7 @@ class AuthService {
                 errorConsoleGroup(
                     'angular2-jwt: tokenGetter',
                     'Error al recuperar los datos del token de autenticación',
+                    `Nombre del token: ${TOKEN_NAME}`,
                     error
                 );
                 return null;
@@ -152,12 +153,28 @@ class AuthService {
     }
 
     /** Verifica si el token de autenticacion es valido */
-    authenticated(): boolean {
-        infoConsoleGroup(
-            'auth0-lock: tokenGetter',
-            'Ejecutando verificacion de autenticación'
-        );
-        return tokenNotExpired();
+    authenticated(): Promise<boolean> {
+        return this.getIdToken()
+            .then(token => {
+                let jwtHelper = new JwtHelper();
+                let resultado: boolean;
+                resultado = token != null && !jwtHelper.isTokenExpired(token);
+
+                infoConsoleGroup(
+                    'AuthService: authenticated',
+                    'Resultado de información de token',
+                    resultado
+                );
+                return resultado;
+            })
+            .catch(error => {
+                errorConsoleGroup(
+                    'AuthService: authenticated',
+                    'Error al verificar el token de autenticación',
+                    error
+                );
+                return false;
+            });
     }
 
     /** Remueve la informacion del token de autenticacion */
