@@ -9,11 +9,11 @@ const DOMAIN: string = 'auth-batressc.auth0.com';
 const TOKEN_NAME: string = 'auth_token';
 const CUSTOM_AUTH_PROVIDER: any = {
     provide: AuthHttp,
-    deps: [Http, RequestOptions, AuthService],
-    useFactory: (http: Http, options: RequestOptions, customService: AuthService) => {
+    deps: [Http, RequestOptions, { provide: AuthService, useClass: AuthService} ],
+    useFactory: (http: Http, options: RequestOptions, service: AuthService) => {
         return new AuthHttp(new AuthConfig({
             tokenName: TOKEN_NAME,
-            tokenGetter: customService.isTokenNotExpired()
+            tokenGetter: service.isTokenNotExpired
         }), http, options);
     }
 };

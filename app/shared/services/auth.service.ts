@@ -153,6 +153,10 @@ class AuthService {
 
     /** Verifica si el token de autenticacion es valido */
     authenticated(): boolean {
+        infoConsoleGroup(
+            'auth0-lock: tokenGetter',
+            'Ejecutando verificacion de autenticación'
+        );
         return tokenNotExpired();
     }
 
