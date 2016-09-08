@@ -7,6 +7,7 @@ import { AuthService } from './shared/services/auth.service';
 const CLIENT_ID: string = 'dlPojysYVsEdDoyTelIKYSMM11OUGJ6x';
 const DOMAIN: string = 'auth-batressc.auth0.com';
 const TOKEN_NAME: string = 'auth_token';
+const PROFILE_VAR: string = 'auth_profile';
 const CUSTOM_AUTH_PROVIDER: any = customProvider();
 
 function customProvider(): any {
@@ -26,5 +27,6 @@ export {
     CLIENT_ID,
     DOMAIN,
     TOKEN_NAME,
+    PROFILE_VAR,
     CUSTOM_AUTH_PROVIDER
 }

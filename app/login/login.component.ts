@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, AfterViewInit } from '@angular/core';
 
 import { AuthService } from '../shared/services/auth.service'; 
 
@@ -7,13 +7,13 @@ import { AuthService } from '../shared/services/auth.service';
     templateUrl: 'app/login/login.component.html',
     styleUrls: ['app/login/login.component.css']
 })
-class LoginComponent implements OnInit {
+class LoginComponent implements AfterViewInit {
     isAuthenticated: boolean;
     constructor(private auth: AuthService) { 
         this.isAuthenticated = false;
     }
 
-    ngOnInit(): void {
+    ngAfterViewInit(): void {
         this.setAuthentication();
     }
 
@@ -24,18 +24,6 @@ class LoginComponent implements OnInit {
                 console.log('Error en la recuperación de la autenticación');
                 this.isAuthenticated = false;
             });
-    }
-
-    login(): void {
-        this.auth.login();
-        //Esta llamada falla ya que login es asincrono. CORREGIR!
-        this.setAuthentication();
-    }
-
-    logout(): void {
-        this.auth.logout();
-        //Esta llamada falla ya que logout es asincrono. CORREGIR!
-        this.setAuthentication();
     }
 }
 
