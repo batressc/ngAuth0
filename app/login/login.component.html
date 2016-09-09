@@ -1,2 +1,8 @@
-<button (click)="login()" *ngIf="!isAuthenticated">Login</button> 
-<button (click)="logout()" *ngIf="isAuthenticated">Logout</button>
+<div class="content">
+    <div>
+        <img src="assets/img/auth0-logo.png" alt="Auth0 logo" />
+    </div>
+    <label>Ingresa para dar seguimiento a tus envíos</label>
+    <button (click)="login()" *ngIf="!isAuthenticated">Login</button> 
+    <button (click)="logout()" *ngIf="isAuthenticated">Logout</button>
+</div>

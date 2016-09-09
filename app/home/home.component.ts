@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../shared/services/auth.service';
 
@@ -11,7 +12,7 @@ class HomeComponent implements OnInit {
     imgProfile: string;
     nickNameProfile: string; 
 
-    constructor(private auth: AuthService) { 
+    constructor(private auth: AuthService, private router: Router) { 
         this.imgProfile = '';
         this.nickNameProfile = '';
     }
@@ -32,6 +33,10 @@ class HomeComponent implements OnInit {
             });
     }
 
+    logout(): void {
+        this.auth.logout();
+        this.router.navigate(['login']);
+    }
 }
 
 export { HomeComponent }

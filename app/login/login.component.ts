@@ -32,6 +32,7 @@ class LoginComponent implements OnInit {
 
     logout(): void {
         this.auth.logout();
+        location.reload();
     }
 }
 
