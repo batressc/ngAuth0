@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { JwtHelper } from 'angular2-jwt';
 import { CLIENT_ID, DOMAIN, TOKEN_NAME, PROFILE_VAR } from '../../app.auth.config';
-import { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup } from '../tools/utilities.tool';
+import { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup } from '../tools/utilities.tool'; 
 const localforage: LocalForage = require('localforage');
 
 declare var Auth0Lock: any;
@@ -99,7 +99,14 @@ class AuthService {
     //Configura valores y callbacks de auth0-lock
     private configureAuth0Lock(): void {
         //Inicializacion y opciones
-        let lockOptions = { language: 'es' };
+        let lockOptions = {
+            auth: {
+                redirect: true,
+                redirectUrl: `${window.location.origin}/home`,
+                responseType: 'token'
+            },
+            language: 'es' 
+        };
         this.lock = new Auth0Lock(CLIENT_ID, DOMAIN, lockOptions);
         //Configurando callbacks
         this.configureCallbacksAuth0Lock();
@@ -124,20 +131,19 @@ class AuthService {
     }
 
     /** Verifica si el token de autenticacion es valido */
-    authenticated(): Promise<boolean> {
-        return Promise.resolve(true);
-        /*return this.getIdToken()
+    isValidToken(): Promise<boolean> {
+        return this.getIdToken()
             .then(token => {
                 let jwtHelper = new JwtHelper();
                 let resultado: boolean;
                 resultado = token != null && !jwtHelper.isTokenExpired(token);
-                infoConsoleGroup('AuthService: authenticated', 'Resultado de información de token', resultado);
+                infoConsoleGroup('AuthService: isValidToken', 'Resultado de información de token', token, resultado);
                 return resultado;
             })
             .catch(error => {
-                errorConsoleGroup('AuthService: authenticated', 'Error al verificar el token de autenticación', error);
+                errorConsoleGroup('AuthService: isValidToken', 'Error al verificar el token de autenticación', error);
                 return false;
-            });*/
+            });
     }
 
     /** Lanza el widget de login de auth0 */
@@ -150,6 +156,9 @@ class AuthService {
         localforage.removeItem(TOKEN_NAME)
             .then(() => infoConsoleGroup('auth0-lock: logout', 'Se removió informacion del token de autenticación', TOKEN_NAME))
             .catch(error => errorConsoleGroup('auth0-lock: logout', 'No se pudo eliminar la informacion del token de autenticación', error));
+        localforage.removeItem(PROFILE_VAR)
+            .then(() => infoConsoleGroup('auth0-lock: logout', 'Se removió informacion del perfil de autenticación', PROFILE_VAR))
+            .catch(error => errorConsoleGroup('auth0-lock: logout', 'No se pudo eliminar la informacion del perfil de autenticación', error));
     }
 
     /** Devuelve la informacion del perfil de usuario almacenada en el storage local */

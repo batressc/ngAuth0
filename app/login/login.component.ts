@@ -1,4 +1,4 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 import { AuthService } from '../shared/services/auth.service'; 
 
@@ -7,23 +7,31 @@ import { AuthService } from '../shared/services/auth.service';
     templateUrl: 'app/login/login.component.html',
     styleUrls: ['app/login/login.component.css']
 })
-class LoginComponent implements AfterViewInit {
+class LoginComponent implements OnInit {
     isAuthenticated: boolean;
     constructor(private auth: AuthService) { 
         this.isAuthenticated = false;
     }
 
-    ngAfterViewInit(): void {
-        this.setAuthentication();
-    }
-
     private setAuthentication(): void {
-        this.auth.authenticated()
+        this.auth.isValidToken()
             .then(result => this.isAuthenticated = result)
             .catch(error => {
                 console.log('Error en la recuperación de la autenticación');
                 this.isAuthenticated = false;
             });
+    }
+
+    ngOnInit(): void {
+        this.setAuthentication();
+    }
+
+    login(): void {
+        this.auth.login();
+    }
+
+    logout(): void {
+        this.auth.logout();
     }
 }
 
