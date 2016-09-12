@@ -19,4 +19,10 @@ function warnConsoleGroup(grupo: string, ...elementos: Array<any>): void {
     console.groupEnd();
 }
 
-export { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup }
+/** Verifica si un objeto posee una determinada propiedad */
+function verificarPropiedad(obj: any, prop: string): boolean {
+    var proto = obj.__proto__ || obj.constructor.prototype;
+    return (prop in obj) && (!(prop in proto) || proto[prop] !== obj[prop]);
+}
+
+export { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup, verificarPropiedad }

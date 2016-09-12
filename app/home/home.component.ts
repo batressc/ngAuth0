@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import 'rxjs/add/operator/map';
 
 import { AuthService } from '../shared/services/auth.service';
+//import { DataService } from '../shared/services/data.service';
 
 @Component({
     selector: 'ba3-home',
@@ -10,33 +11,36 @@ import { AuthService } from '../shared/services/auth.service';
 })
 class HomeComponent implements OnInit {
     imgProfile: string;
-    nickNameProfile: string; 
+    nickNameProfile: string;
+    data: Array<any>; 
 
-    constructor(private auth: AuthService, private router: Router) { 
+    constructor(private auth: AuthService) {//, private dataService: DataService) { 
         this.imgProfile = '';
         this.nickNameProfile = '';
+        this.data = [];
     }
 
     ngOnInit(): void {
-        this.auth.getLocalProfile()
-            .then(profile => {
-                if (profile) {
-                    this.imgProfile = profile.picture;
-                    this.nickNameProfile = profile.nickname;
-                } else {
-                    this.imgProfile = '';
-                    this.nickNameProfile = '';
-                }
-            })
-            .catch(error => {
-                console.log('Ha ocurrido un error');
-            });
+        let profile = this.auth.getLocalProfile();
+        if (profile) {
+            this.imgProfile = profile.picture;
+            this.nickNameProfile = profile.nickname;
+        }
+        //this.getData();
     }
 
     logout(): void {
         this.auth.logout();
-        this.router.navigate(['login']);
     }
+
+    /*getData(): void {
+        this.dataService.getData().map(result => result.json())
+            .subscribe(
+                data => { this.data = data; },
+                error => console.log(error),
+                () => console.log('Datos obtenidos')
+            );
+    }*/
 }
 
 export { HomeComponent }

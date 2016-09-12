@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { JwtHelper } from 'angular2-jwt';
 import { CLIENT_ID, DOMAIN, TOKEN_NAME, PROFILE_VAR } from '../../app.auth.config';
-import { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup } from '../tools/utilities.tool'; 
-const localforage: LocalForage = require('localforage');
+import { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup, verificarPropiedad } from '../tools/utilities.tool'; 
 
 declare var Auth0Lock: any;
 
@@ -11,41 +11,21 @@ declare var Auth0Lock: any;
 class AuthService {
     lock: any;
 
-    constructor() {
-        this.configureStorage();
+    constructor(private router: Router) {
         this.configureAuth0Lock();
-    }
-
-    //Configura opciones para LocalForage
-    private configureStorage(): void {
-        let config: LocalForageOptions = {
-            name: 'ngAuth0',
-            storeName: 'authData',
-            description: 'Datos de autenticación'
-        };
-        if (localforage.config(config)) {
-            infoConsoleGroup('localForage: Inicialización', 'Creado almacén de datos de autenticación', config);     
-        } else {
-            warnConsoleGroup('localForage: Inicialización', 'No se inicializó almacén de datos. Utilizando valores por defecto', localforage);
-            console.warn();
-        }
     }
 
     //Recupera y almacena la informacion del perfil
     private getAndSaveProfile(idToken: string): void {
         this.lock.getProfile(idToken, (error: any, data: any) => {
             if (!error) {
-                localforage.setItem(PROFILE_VAR, data)
-                    .then(saveData => {
-                        if (saveData) {
-                            infoConsoleGroup('auth0-lock: getProfile', 'Datos de perfil almacenados con éxito', saveData);
-                        } else {
-                            warnConsoleGroup('auth0-lock: getProfile', 'No se guardaron los datos del perfil', data);
-                        }
-                    })
-                    .catch(error => {
-                            errorConsoleGroup('auth0-lock: getProfile', 'Error al trata de guardar los datos del perfil', data);
-                    });
+                localStorage.setItem(PROFILE_VAR, JSON.stringify(data));
+                let temp = localStorage.getItem(PROFILE_VAR);
+                if (temp) {
+                    infoConsoleGroup('auth0-lock: getProfile', 'Datos de perfil almacenados con éxito', data);
+                    this.router.navigate(['home']);
+                }
+                else warnConsoleGroup('auth0-lock: getProfile', 'No se guardaron los datos del perfil', data);
             } else {
                 errorConsoleGroup('auth0-lock: getProfile', 'No se pudo recuperar la inforamción del perfil', error);
             }
@@ -68,10 +48,12 @@ class AuthService {
     }
 
     //Se produce despues de autenticacion exitosa
-    private authenticatedCallback(authResult: any): void { 
-        localforage.setItem(TOKEN_NAME, authResult)
-            .then(data => infoConsoleGroup('auth0-lock: authenticated', 'Autenticacion exitosa', data))
-            .catch(error => errorConsoleGroup('auth0-lock: authenticated', 'Error al guardar la informacion del token de autenticacion', error));
+    private authenticatedCallback(authResult: any): void {
+        infoConsoleGroup('auth0-lock: authenticated', 'Autenticacion exitosa', authResult);
+        localStorage.setItem(TOKEN_NAME, JSON.stringify(authResult));
+        let temp = localStorage.getItem(TOKEN_NAME);
+        if (temp) infoConsoleGroup('auth0-lock: authenticated', 'Se guardó información de autenticación', authResult);
+        else errorConsoleGroup('auth0-lock: authenticated', 'Error al guardar la informacion del token de autenticacion', authResult);
         this.getAndSaveProfile(authResult.idToken);
     }
 
@@ -81,8 +63,14 @@ class AuthService {
     }
 
     //Metodo low-level. Si no hay nada => null, exito => authResult, error => authError
-    private hashParsedCallback(result: any): void { 
-        warnConsoleGroup('auth0-lock: hash_parsed', 'Mostrando unicamente lo que pasa en este evento', result);
+    private hashParsedCallback(result: any): void {
+         if (!result) {
+            if (this.isValidToken()) this.router.navigate(['home']);
+            else {
+                this.router.navigate(['login']);
+            }
+        } else if (verificarPropiedad(result, 'idToken')) this.authenticatedCallback(result);
+        else this.authorizationErrorCallback(result);
     }
 
     //Configurando callbacks para auth0-lock
@@ -93,57 +81,32 @@ class AuthService {
         this.lock.on('unrecoverable_error', (unrecoverableError) => this.unrecoverableErrorCallback(unrecoverableError));
         this.lock.on('authenticated', (authResult) => this.authenticatedCallback(authResult));
         this.lock.on('authorization_error', (authError) => this.authorizationErrorCallback(authError));
-        this.lock.on('hash_parsed', (result) => this.hashParsedCallback(result));
+        //this.lock.on('hash_parsed', (result) => this.hashParsedCallback(result));
     }
 
     //Configura valores y callbacks de auth0-lock
     private configureAuth0Lock(): void {
         //Inicializacion y opciones
         let lockOptions = {
-            auth: {
-                redirect: true,
-                redirectUrl: `${window.location.origin}/home`,
-                responseType: 'token'
-            },
-            language: 'es' 
+            language: 'es',
+            rememberLastLogin: false
         };
         this.lock = new Auth0Lock(CLIENT_ID, DOMAIN, lockOptions);
         //Configurando callbacks
         this.configureCallbacksAuth0Lock();
     }
 
-    /** Devuelve el idToken del token JWT */
-    getIdToken(): Promise<string> {
-        return localforage.getItem<any>(TOKEN_NAME)
-            .then(data => { 
-                if (data) {
-                    infoConsoleGroup('angular2-jwt: tokenGetter', 'Datos de token de autenticación recuperados', data);
-                    return <string>data.idToken;
-                } else {
-                    warnConsoleGroup('angular2-jwt: tokenGetter', 'No se encontraron datos de token de autenticación', `Nombre del token: ${TOKEN_NAME}`);
-                    return null;
-                } 
-            })
-            .catch(error => {
-                errorConsoleGroup('angular2-jwt: tokenGetter', 'Error al recuperar los datos del token de autenticación', `Nombre del token: ${TOKEN_NAME}`, error);
-                return null;
-            });
-    }
-
     /** Verifica si el token de autenticacion es valido */
-    isValidToken(): Promise<boolean> {
-        return this.getIdToken()
-            .then(token => {
-                let jwtHelper = new JwtHelper();
-                let resultado: boolean;
-                resultado = token != null && !jwtHelper.isTokenExpired(token);
-                infoConsoleGroup('AuthService: isValidToken', 'Resultado de información de token', token, resultado);
-                return resultado;
-            })
-            .catch(error => {
-                errorConsoleGroup('AuthService: isValidToken', 'Error al verificar el token de autenticación', error);
-                return false;
-            });
+    isValidToken(): boolean {
+        let resultado: boolean = false;
+        let token = localStorage.getItem(TOKEN_NAME);
+        if (token) {
+            let tokenObject = JSON.parse(token);
+            let jwtHelper = new JwtHelper();
+            resultado = tokenObject.idToken != null && !jwtHelper.isTokenExpired(tokenObject.idToken);
+            infoConsoleGroup('AuthService: isValidToken', 'Resultado de información de token', tokenObject, resultado);
+        } else warnConsoleGroup('AuthService.isValidToken', 'No se encontraron datos de token de autenticación', TOKEN_NAME);
+        return resultado;
     }
 
     /** Lanza el widget de login de auth0 */
@@ -152,26 +115,16 @@ class AuthService {
     }
 
     /** Remueve la informacion del token de autenticacion */
-    logout(): void {
-        localforage.removeItem(TOKEN_NAME)
-            .then(() => infoConsoleGroup('auth0-lock: logout', 'Se removió informacion del token de autenticación', TOKEN_NAME))
-            .catch(error => errorConsoleGroup('auth0-lock: logout', 'No se pudo eliminar la informacion del token de autenticación', error));
-        localforage.removeItem(PROFILE_VAR)
-            .then(() => infoConsoleGroup('auth0-lock: logout', 'Se removió informacion del perfil de autenticación', PROFILE_VAR))
-            .catch(error => errorConsoleGroup('auth0-lock: logout', 'No se pudo eliminar la informacion del perfil de autenticación', error));
+    logout(redirect: boolean = true): void {
+        localStorage.removeItem(TOKEN_NAME);
+        localStorage.removeItem(PROFILE_VAR);
+        infoConsoleGroup('auth0-lock: logout', 'Se removió informacion del token de autenticación y perfil de usuario', TOKEN_NAME)
+        if (redirect) this.router.navigate(['login']);
     }
 
     /** Devuelve la informacion del perfil de usuario almacenada en el storage local */
-    getLocalProfile(): Promise<any> {
-        return localforage.getItem<any>(PROFILE_VAR)
-            .then(profile => {
-                infoConsoleGroup('AuthService: getLocalProfile', 'Datos de perfil local recuperados', profile); 
-                return profile;
-            })
-            .catch(error => {
-                errorConsoleGroup('AuthService: getLocalProfile', 'No se pudo recuperar los datos del perfil local', error);
-                return null;
-            });
+    getLocalProfile(): any {
+        return JSON.parse(localStorage.getItem(PROFILE_VAR));
     }
 }
 

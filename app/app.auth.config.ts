@@ -17,7 +17,7 @@ function customProvider(): any {
         useFactory: (http: Http, options: RequestOptions, service: AuthService) => {
             return new AuthHttp(new AuthConfig({
                 tokenName: TOKEN_NAME,
-                tokenGetter: service.getIdToken
+                tokenGetter: service.isValidToken
             }), http, options);
         }
     };

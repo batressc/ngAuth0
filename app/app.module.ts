@@ -4,6 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
+import { AuthGuard } from './app.routing.guard';
 import { appRoutingProviders, routing } from './app.routing';
 import { AuthService } from './shared/services/auth.service';
 import { TOKEN_NAME, CUSTOM_AUTH_PROVIDER } from './app.auth.config';
@@ -13,6 +14,7 @@ import { TOKEN_NAME, CUSTOM_AUTH_PROVIDER } from './app.auth.config';
     declarations: [AppComponent, LoginComponent, HomeComponent],
     bootstrap: [AppComponent],
     providers: [
+        AuthGuard,
         appRoutingProviders,
         AuthService,
         CUSTOM_AUTH_PROVIDER

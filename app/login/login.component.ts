@@ -9,30 +9,22 @@ import { AuthService } from '../shared/services/auth.service';
 })
 class LoginComponent implements OnInit {
     isAuthenticated: boolean;
-    constructor(private auth: AuthService) { 
+
+    constructor(private authService: AuthService) { 
         this.isAuthenticated = false;
     }
 
-    private setAuthentication(): void {
-        this.auth.isValidToken()
-            .then(result => this.isAuthenticated = result)
-            .catch(error => {
-                console.log('Error en la recuperación de la autenticación');
-                this.isAuthenticated = false;
-            });
-    }
-
     ngOnInit(): void {
-        this.setAuthentication();
+        this.isAuthenticated = this.authService.isValidToken();
     }
 
     login(): void {
-        this.auth.login();
+        this.authService.login();
     }
 
     logout(): void {
-        this.auth.logout();
-        location.reload();
+        this.authService.logout();
+        window.location.reload();
     }
 }
 
