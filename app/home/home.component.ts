@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import 'rxjs/add/operator/map';
 
 import { AuthService } from '../shared/services/auth.service';
-//import { DataService } from '../shared/services/data.service';
+import { DataService } from '../shared/services/data.service';
 
 @Component({
     selector: 'ba3-home',
@@ -14,7 +14,7 @@ class HomeComponent implements OnInit {
     nickNameProfile: string;
     data: Array<any>; 
 
-    constructor(private auth: AuthService) {//, private dataService: DataService) { 
+    constructor(private auth: AuthService, private dataService: DataService) { 
         this.imgProfile = '';
         this.nickNameProfile = '';
         this.data = [];
@@ -26,21 +26,21 @@ class HomeComponent implements OnInit {
             this.imgProfile = profile.picture;
             this.nickNameProfile = profile.nickname;
         }
-        //this.getData();
+        this.getData();
     }
 
     logout(): void {
         this.auth.logout();
     }
 
-    /*getData(): void {
+    getData(): void {
         this.dataService.getData().map(result => result.json())
             .subscribe(
                 data => { this.data = data; },
                 error => console.log(error),
                 () => console.log('Datos obtenidos')
             );
-    }*/
+    }
 }
 
 export { HomeComponent }

@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { Http, Headers } from '@angular/http';
 
 import { JwtHelper } from 'angular2-jwt';
-import { CLIENT_ID, DOMAIN, TOKEN_NAME, PROFILE_VAR } from '../../app.auth.config';
+import { CLIENT_ID, DOMAIN, TOKEN_NAME, PROFILE_VAR, DELEGATION, DEVICE } from '../../app.auth.config';
 import { errorConsoleGroup, infoConsoleGroup, warnConsoleGroup, verificarPropiedad } from '../tools/utilities.tool'; 
 
 declare var Auth0Lock: any;
@@ -11,7 +12,7 @@ declare var Auth0Lock: any;
 class AuthService {
     lock: any;
 
-    constructor(private router: Router) {
+    constructor(private router: Router, private http: Http) {
         this.configureAuth0Lock();
     }
 
@@ -89,11 +90,52 @@ class AuthService {
         //Inicializacion y opciones
         let lockOptions = {
             language: 'es',
-            rememberLastLogin: false
+            rememberLastLogin: false,
+            auth: {
+                params: {
+                    scope: 'openid offline_access',
+                    device: DEVICE
+                }
+            }
         };
         this.lock = new Auth0Lock(CLIENT_ID, DOMAIN, lockOptions);
         //Configurando callbacks
         this.configureCallbacksAuth0Lock();
+    }
+
+    /** Devuelve el token nuevo a partir del token de refresco */
+    regreshToken(refreshToken: string) {
+        let body = {
+            client_id: CLIENT_ID,
+            grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            refreshToken: refreshToken,
+            api_type: 'app'
+        };
+        let headers: Headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        return this.http.post(DELEGATION, body, { headers: headers });
+    }
+
+    /** Devuelve el token actual */
+    getToken(): string {
+        let tokenId: string = '';
+        let token = localStorage.getItem(TOKEN_NAME);
+        if (token) {
+            let tokenObject = JSON.parse(token);
+            tokenId = tokenObject.idToken;
+        }
+        return tokenId;
+    }
+
+    /** Obtiene el token de refresco */
+    getRefreshToken(): string {
+        let tokenRefresh: string = '';
+        let token = localStorage.getItem(TOKEN_NAME);
+        if (token) {
+            let tokenObject = JSON.parse(token);
+            tokenRefresh = tokenObject.refreshToken;
+        }
+        return tokenRefresh;
     }
 
     /** Verifica si el token de autenticacion es valido */

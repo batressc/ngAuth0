@@ -2,3 +2,17 @@
 <img [src]="imgProfile" />
 <label>{{ nickNameProfile }}<label>
 <button (click)="logout()">Logout</button>
+<button (click)="getData()">Refrescar</button>
+<br />
+<table>
+    <th>
+        <td>ID</td>
+        <td>Descripción</td>
+        <td>Precio</td>
+    <th>
+    <tr *ngFor="let item of data">
+        <td>{{ item.Id }}</td>
+        <td>{{ item.Descripcion }}</td>
+        <td>{{ item.Precio }}</td>
+    </tr>
+</table>
